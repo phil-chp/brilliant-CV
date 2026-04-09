@@ -431,13 +431,13 @@
       gutter: 6pt,
       align: (x, y) => if x == 1 { right } else { auto },
       table(
-          columns: (if display-logo and logo != "" { 4% } else { 0% }, 1fr),
+          columns: (if display-logo and logo != "" { 8% } else { 0% }, 1fr),
           inset: 0pt,
           stroke: 0pt,
           align: horizon,
-          column-gutter: if display-logo and logo != "" { 4pt } else { 0pt },
+          column-gutter: if display-logo and logo != "" { 10pt } else { 0pt },
           if logo == "" [] else {
-            set image(width: 100%)
+            set image(width: 123%)
             logo
           },
           table(
