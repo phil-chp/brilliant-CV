@@ -756,7 +756,7 @@
     stroke: none,
     skill-type-style(type), skill-info-style(info),
   )
-  v(-6pt)
+  v(-5pt)
 }
 
 /// Add a skill with a level to the CV.
