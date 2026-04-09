@@ -1,11 +1,13 @@
 /*
-* Functions for the CV template
-*/
+ * Functions for the CV template
+ */
 
 #import "@preview/fontawesome:0.6.0": *
 #import "./utils/injection.typ": _inject
-#import "./utils/styles.typ": _latin-font-list, _latin-header-font, _awesome-colors, _regular-colors, _set-accent-color, h-bar
-#import "./utils/lang.typ": _is-non-latin, _default-date-width
+#import "./utils/styles.typ": (
+  _awesome-colors, _latin-font-list, _latin-header-font, _regular-colors, _set-accent-color, h-bar,
+)
+#import "./utils/lang.typ": _default-date-width, _is-non-latin
 
 /// Metadata state to avoid passing metadata to every function
 #let cv-metadata = state("cv-metadata", none)
@@ -13,16 +15,17 @@
 /// Create header style functions
 /// -> dictionary
 #let _header-styles(header-font, regular-colors, accent-color, header-info-font-size) = (
-  first-name: (str) => text(
+  first-name: str => text(
     font: header-font,
-    size: 32pt,
+    size: 24pt,
     weight: "light",
     fill: regular-colors.darkgray,
     str,
   ),
-  last-name: (str) => text(font: header-font, size: 32pt, weight: "bold", str),
-  info: (str) => text(size: header-info-font-size, fill: accent-color, str),
-  quote: (str) => text(size: 10pt, weight: "medium", style: "italic", fill: accent-color, str),
+  last-name: str => text(font: header-font, size: 24pt, weight: "bold", str),
+  job-role: str => text(font: header-font, size: 13pt, weight: "medium", fill: accent-color, str),
+  info: str => text(size: header-info-font-size, fill: accent-color, str),
+  quote: str => text(size: 10pt, weight: "medium", style: "italic", fill: accent-color, str),
 )
 
 /// Extract layout values with defaults
@@ -75,7 +78,7 @@
         icon
         h(5pt)
         if link-value != "" {
-        link(link-value)[#text]
+          link(link-value)[#text]
         } else {
           text
         }
@@ -101,7 +104,7 @@
         } else if k == "researchgate" {
           link("https://www.researchgate.net/profile/" + v)[#v]
         } else if k == "phone" {
-          link("tel:" + v.replace(" ",""))[#v]
+          link("tel:" + v.replace(" ", ""))[#v]
         } else {
           v
         }
@@ -117,17 +120,29 @@
 
 /// Create header name section
 /// -> content
-#let _make-header-name-section(styles, non-latin, non-latin-name, first-name, last-name, personal-info, header-quote, custom-icons) = {
+// Add job-role argument
+#let _make-header-name-section(
+  styles,
+  non-latin,
+  non-latin-name,
+  first-name,
+  last-name,
+  job-role,
+  personal-info,
+  header-quote,
+  custom-icons,
+) = {
   table(
     columns: 1fr,
     inset: 0pt,
     stroke: none,
-    row-gutter: 6mm,
+    row-gutter: 4mm,
     if non-latin {
       (styles.first-name)(non-latin-name)
     } else [#(styles.first-name)(first-name) #h(5pt) #(styles.last-name)(last-name)],
+    ..if job-role != none and job-role != "" { ([#(styles.job-role)(job-role)],) },
     [#(styles.info)(_make-header-info(personal-info, _personal-info-icons, custom-icons))],
-    .. if header-quote != none { ([#(styles.quote)(header-quote)],) },
+    ..if header-quote != none { ([#(styles.quote)(header-quote)],) },
   )
 }
 
@@ -176,16 +191,21 @@
   let header-alignment = eval(metadata.layout.header.header_align)
   // Backward compatibility: panic if old fields are detected
   if metadata.inject.at("inject_ai_prompt", default: none) != none {
-    panic("'inject_ai_prompt' has been removed and will be fully deprecated in v4.0. Use 'custom_ai_prompt_text' in [inject] instead.")
+    panic(
+      "'inject_ai_prompt' has been removed and will be fully deprecated in v4.0. Use 'custom_ai_prompt_text' in [inject] instead.",
+    )
   }
   if metadata.inject.at("inject_keywords", default: none) != none {
-    panic("'inject_keywords' has been removed and will be fully deprecated in v4.0. Use 'injected_keywords_list' directly instead — if the list is present, keywords will be injected. To disable injection, remove 'injected_keywords_list'.")
+    panic(
+      "'inject_keywords' has been removed and will be fully deprecated in v4.0. Use 'injected_keywords_list' directly instead — if the list is present, keywords will be injected. To disable injection, remove 'injected_keywords_list'.",
+    )
   }
   let custom-ai-prompt-text = metadata.inject.at("custom_ai_prompt_text", default: none)
   let keywords = metadata.inject.at("injected_keywords_list", default: ())
   let personal-info = metadata.personal.info
   let first-name = metadata.personal.first_name
   let last-name = metadata.personal.last_name
+  let job-role = metadata.lang.at(metadata.language).at("job_role", default: none)
   let header-quote = metadata.lang.at(metadata.language).at("header_quote", default: none)
   let display-profile-photo = metadata.layout.header.display_profile_photo
   let profile-photo-radius = eval(metadata.layout.header.at("profile_photo_radius", default: "50%"))
@@ -205,12 +225,20 @@
 
   // Create styles
   let styles = _header-styles(header-font, regular-colors, accent-color, header-info-font-size)
-  
+
   // Create components
   let name-section = _make-header-name-section(
-    styles, non-latin, non-latin-name, first-name, last-name, personal-info, header-quote, custom-icons
+    styles,
+    non-latin,
+    non-latin-name,
+    first-name,
+    last-name,
+    job-role,
+    personal-info,
+    header-quote,
+    custom-icons,
   )
-  
+
   let photo-section = _make-header-photo-section(display-profile-photo, profile-photo, profile-photo-radius)
 
   // Render header
@@ -264,11 +292,9 @@
       columns: (1fr, auto),
       inset: -5pt,
       stroke: none,
-      footer-style([#first-name #last-name]),
-      footer-style(footer-text),
+      footer-style([#first-name #last-name]), footer-style(footer-text),
     )
   }
-
 }
 
 /// Add the title of a section.
@@ -320,17 +346,17 @@
   block(
     sticky: true,
     [#if non-latin {
-      section-title-style(title, color: accent-color)
-    } else {
-      if highlighted {
-        section-title-style(highlighted-text, color: accent-color)
-        section-title-style(normal-text, color: black)
+        section-title-style(title, color: accent-color)
       } else {
-        section-title-style(title, color: black)
+        if highlighted {
+          section-title-style(highlighted-text, color: accent-color)
+          section-title-style(normal-text, color: black)
+        } else {
+          section-title-style(title, color: black)
+        }
       }
-    }
-    #h(2pt)
-    #box(width: 1fr, line(stroke: 0.9pt, length: 100%))]
+      #h(2pt)
+      #box(width: 1fr, line(stroke: 0.9pt, length: 100%))],
   )
 }
 
@@ -347,7 +373,7 @@
   } else {
     eval(date-width)
   }
-  
+
   return (
     accent-color: accent-color,
     before-entry-skip: before-entry-skip,
@@ -360,22 +386,22 @@
 /// Create entry style functions
 /// -> dictionary
 #let _entry-styles(accent-color, before-entry-description-skip) = (
-  a1: (str) => text(size: 10pt, weight: "bold", str),
-  a2: (str) => align(right, text(weight: "medium", fill: accent-color, style: "oblique", str)),
-  b1: (str) => text(size: 8pt, fill: accent-color, weight: "medium", smallcaps(str)),
-  b2: (str) => align(right, text(size: 8pt, weight: "medium", fill: gray, style: "oblique", str)),
-  dates: (dates) => [
+  a1: str => text(size: 10pt, weight: "bold", str),
+  a2: str => align(right, text(weight: "medium", fill: accent-color, style: "oblique", str)),
+  b1: str => text(size: 8pt, fill: accent-color, weight: "medium", smallcaps(str)),
+  b2: str => align(right, text(size: 8pt, weight: "medium", fill: gray, style: "oblique", str)),
+  dates: dates => [
     #set list(marker: [])
     #dates
   ],
-  description: (str) => text(
+  description: str => text(
     fill: _regular-colors.lightgray,
     {
       v(before-entry-description-skip)
       str
     },
   ),
-  tag: (str) => align(center, text(size: 8pt, weight: "regular", str)),
+  tag: str => align(center, text(size: 8pt, weight: "regular", str)),
 )
 
 /// Create entry tag list
@@ -412,10 +438,10 @@
   let before-entry-skip = params.before-entry-skip
   let before-entry-description-skip = params.before-entry-description-skip
   let date-width = params.date-width
-  
+
   // Create styles
   let styles = _entry-styles(accent-color, before-entry-description-skip)
-  
+
   // Layout settings
   let display-logo = metadata.layout.entry.display_logo
   let society-first-setting = metadata.layout.entry.display_entry_society_first
@@ -431,29 +457,29 @@
       gutter: 6pt,
       align: (x, y) => if x == 1 { right } else { auto },
       table(
-          columns: (if display-logo and logo != "" { 8% } else { 0% }, 1fr),
+        columns: (if display-logo and logo != "" { 8% } else { 0% }, 1fr),
+        inset: 0pt,
+        stroke: 0pt,
+        align: horizon,
+        column-gutter: if display-logo and logo != "" { 10pt } else { 0pt },
+        if logo == "" [] else {
+          set image(width: 123%)
+          logo
+        },
+        table(
+          columns: auto,
           inset: 0pt,
           stroke: 0pt,
-          align: horizon,
-          column-gutter: if display-logo and logo != "" { 10pt } else { 0pt },
-          if logo == "" [] else {
-            set image(width: 123%)
-            logo
+          row-gutter: 6pt,
+          align: auto,
+          {
+            (styles.a1)(if society-first-setting { society } else { title })
           },
-          table(
-            columns: auto,
-            inset: 0pt,
-            stroke: 0pt,
-            row-gutter: 6pt,
-            align: auto,
-            {
-              (styles.a1)(if society-first-setting { society } else { title })
-            },
-            {
-              (styles.b1)(if society-first-setting { title } else { society })
-            },
-          ),
+          {
+            (styles.b1)(if society-first-setting { title } else { society })
+          },
         ),
+      ),
       table(
         columns: auto,
         inset: 0pt,
@@ -468,7 +494,6 @@
       (styles.description)(description)
     }
     _create-entry-tag-list(tags, styles.tag)
-    
   } else if entry-type == "start" {
     // Entry start layout (original cv-entry-start logic)
     if display-logo and logo != "" {
@@ -494,12 +519,10 @@
         stroke: 0pt,
         gutter: 6pt,
         align: horizon,
-        (styles.a1)(society),
-        (styles.a2)(location),
+        (styles.a1)(society), (styles.a2)(location),
       )
     }
     v(-10pt)
-    
   } else if entry-type == "continued" {
     // Entry continued layout (original cv-entry-continued logic)
     // If the date contains a linebreak, use legacy side-to-side layout
@@ -521,7 +544,7 @@
           (styles.b1)(title)
         },
         (styles.b2)((styles.dates)(date)),
-        )
+      )
       if description != "" and description != none {
         (styles.description)(description)
       }
@@ -540,7 +563,7 @@
           }
         },
         (styles.b2)((styles.dates)(date)),
-        )
+      )
       (styles.description)(description)
       _create-entry-tag-list(tags, styles.tag)
     }
@@ -784,7 +807,7 @@
 #let cv-skill-with-level(
   type: "Type",
   level: 3,
-  info: "Info"
+  info: "Info",
 ) = {
   let skill-type-style(str) = {
     align(right, text(size: 10pt, weight: "bold", str))
@@ -813,7 +836,7 @@
 }
 
 /// Add a skill tag to the CV.
-/// 
+///
 /// - skill (str | content): The skill to be displayed.
 ///
 /// ```example
@@ -959,12 +982,22 @@
 }
 
 // Deprecated function aliases (will be removed in v4.0)
-#let cvPublication(..args) = panic("'cvPublication' has been renamed and will be removed in v4.0. Use 'cv-publication' instead.")
-#let cvEntryStart(..args) = panic("'cvEntryStart' has been renamed and will be removed in v4.0. Use 'cv-entry-start' instead.")
-#let cvEntryContinued(..args) = panic("'cvEntryContinued' has been renamed and will be removed in v4.0. Use 'cv-entry-continued' instead.")
+#let cvPublication(..args) = panic(
+  "'cvPublication' has been renamed and will be removed in v4.0. Use 'cv-publication' instead.",
+)
+#let cvEntryStart(..args) = panic(
+  "'cvEntryStart' has been renamed and will be removed in v4.0. Use 'cv-entry-start' instead.",
+)
+#let cvEntryContinued(..args) = panic(
+  "'cvEntryContinued' has been renamed and will be removed in v4.0. Use 'cv-entry-continued' instead.",
+)
 #let cvSkill(..args) = panic("'cvSkill' has been renamed and will be removed in v4.0. Use 'cv-skill' instead.")
-#let cvSkillWithLevel(..args) = panic("'cvSkillWithLevel' has been renamed and will be removed in v4.0. Use 'cv-skill-with-level' instead.")
-#let cvSkillTag(..args) = panic("'cvSkillTag' has been renamed and will be removed in v4.0. Use 'cv-skill-tag' instead.")
+#let cvSkillWithLevel(..args) = panic(
+  "'cvSkillWithLevel' has been renamed and will be removed in v4.0. Use 'cv-skill-with-level' instead.",
+)
+#let cvSkillTag(..args) = panic(
+  "'cvSkillTag' has been renamed and will be removed in v4.0. Use 'cv-skill-tag' instead.",
+)
 #let cvHonor(..args) = panic("'cvHonor' has been renamed and will be removed in v4.0. Use 'cv-honor' instead.")
 #let cvSection(..args) = panic("'cvSection' has been renamed and will be removed in v4.0. Use 'cv-section' instead.")
 #let cvEntry(..args) = panic("'cvEntry' has been renamed and will be removed in v4.0. Use 'cv-entry' instead.")

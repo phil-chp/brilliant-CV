@@ -69,6 +69,8 @@ language = "en"
     first_name = "John"
     # Your last name, displayed in the header
     last_name = "Doe"
+    # Your job role or title, displayed below your name in the header
+    job_role = "Cybersecurity Researcher"
     # Your mailing address, used as default sender-address in the cover letter
     # address = "123 Main St, San Francisco, CA 94102"
 
@@ -118,6 +120,8 @@ language = "en"
 [lang.de]
     # Italic tagline displayed below your name and contact info
     header_quote = "Erfahrener Datenanalyst sucht ab sofort eine Vollzeitstelle"
+    # Job role or title displayed below your name in the header
+    job_role = "Cybersicherheitsforscher"
     # Text shown in the left side of the footer on CV pages
     cv_footer = "Lebenslauf"
     # Text shown in the left side of the footer on cover letter pages
@@ -126,21 +130,26 @@ language = "en"
 [lang.en]
     # Italic tagline displayed below your name and contact info
     header_quote = "Experienced Data Analyst looking for a full time job starting from now"
+    # Job role or title displayed below your name in the header
+    job_role = "Cybersecurity Researcher"
     cv_footer = "Curriculum vitae"
     letter_footer = "Cover letter"
 
 [lang.fr]
     header_quote = "Analyste de données expérimenté à la recherche d'un emploi à temps plein disponible dès maintenant"
+    job_role = "Chercheur en cybersécurité"
     cv_footer = "Résumé"
     letter_footer = "Lettre de motivation"
 
 [lang.zh]
     header_quote = "具有丰富经验的数据分析师，随时可入职"
+    job_role = "网络安全研究员"
     cv_footer = "简历"
     letter_footer = "申请信"
 
 [lang.it]
     header_quote = "Senior data analyst attualmente disponibile per una posizione di lavoro full-time"
+    job_role = "Ricercatore in sicurezza informatica"
     cv_footer = "Curriculum vitae"
     letter_footer = "Lettera di presentazione"
 
